@@ -1,9 +1,12 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
-import { ImageGalleryItem } from './ImageGalleryItem/ImageGalleryItem';
-import { List } from './ImageGallery.styled';
-import { Button } from 'components/Button/Button';
 import { fetchImages } from 'services/api';
+import { List } from './ImageGallery.styled';
+import { ImageGalleryItem } from './ImageGalleryItem/ImageGalleryItem';
+import { Loader } from 'components/Loader/Loader';
+import { Button } from 'components/Button/Button';
+import { Notification } from 'components/Notification/Notification';
+import ImgNotFound from '../../images/imgNotFound.jpg';
 
 export class ImageGallery extends Component {
   state = {
@@ -46,24 +49,55 @@ export class ImageGallery extends Component {
   }
 
   render() {
-    const { searchData } = this.state;
+    const { searchData, totalHits, status } = this.state;
+    const { onLoadMoreBtn, currentPage } = this.props;
 
-    return (
-      <>
-        <List>
-          {searchData.map(({ id, webformatURL, largeImageURL, tags }) => (
-            <ImageGalleryItem
-              key={id}
-              smallImage={webformatURL}
-              largeImage={largeImageURL}
-              imageDescription={tags}
-            />
-          ))}
-        </List>
+    if (status === 'idle') {
+      return <Notification message="Let's find some images" />;
+    }
 
-        <Button />
-      </>
-    );
+    if (status === 'empty') {
+      return (
+        <Notification message="Sorry, no images match your search">
+          <img src={ImgNotFound} alt="images not found" width="280px" />
+        </Notification>
+      );
+    }
+
+    if (status === 'rejected') {
+      return <Notification message="Ooops, something went wrong" />;
+    }
+
+    if (status === 'pending' && totalHits === 0) {
+      return (
+        <Notification>
+          <Loader />
+        </Notification>
+      );
+    }
+
+    if (status === 'resolved' || (status === 'pending' && totalHits > 0)) {
+      const totalHitsCount = totalHits - currentPage * 12;
+
+      return (
+        <>
+          <List>
+            {searchData.map(({ id, webformatURL, largeImageURL, tags }) => (
+              <ImageGalleryItem
+                key={id}
+                smallImage={webformatURL}
+                largeImage={largeImageURL}
+                imageDescription={tags}
+              />
+            ))}
+          </List>
+
+          {totalHitsCount > 0 && (
+            <Button onLoadMoreBtn={onLoadMoreBtn} status={status} />
+          )}
+        </>
+      );
+    }
   }
 }
 
