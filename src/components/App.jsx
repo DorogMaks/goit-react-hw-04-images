@@ -3,22 +3,44 @@ import { GlobalStyles } from 'components/GlobalStyles';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 
-// import { Modal } from './Modal/Modal';
-
 export class App extends Component {
-  state = {};
+  state = {
+    searchValue: '',
+    currentPage: 1,
+  };
 
-  // componentDidMount() {}
+  onFormSubmit = formSearchValue => {
+    const { searchValue } = this.state;
 
-  // componentDidUpdate(prevProps, prevState) {}
+    const normalizedSearchValue = formSearchValue.toLowerCase().trim();
+
+    if (!normalizedSearchValue || searchValue === formSearchValue) return;
+
+    this.setState({
+      searchValue: normalizedSearchValue,
+      currentPage: 1,
+    });
+  };
+
+  onLoadMoreBtn = () => {
+    this.setState(prevState => ({
+      currentPage: prevState.currentPage + 1,
+    }));
+  };
 
   render() {
+    const { searchValue, currentPage } = this.state;
+
     return (
       <>
         <GlobalStyles />
-        <Searchbar />
+        <Searchbar onFormSubmit={this.onFormSubmit} />
         <main>
-          <ImageGallery />
+          <ImageGallery
+            searchValue={searchValue}
+            currentPage={currentPage}
+            onLoadMoreBtn={this.onLoadMoreBtn}
+          />
         </main>
       </>
     );

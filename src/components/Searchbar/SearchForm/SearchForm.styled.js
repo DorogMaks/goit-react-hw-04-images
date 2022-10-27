@@ -22,12 +22,13 @@ export const SearchFormButton = styled.button`
   cursor: pointer;
   outline: none;
 
-  &:hover {
+  :hover,
+  :focus {
     opacity: 1;
   }
 `;
 
-export const SearchFormButtonLabel = styled.span`
+export const ButtonLabel = styled.span`
   position: absolute;
   width: 1px;
   height: 1px;

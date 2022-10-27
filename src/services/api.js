@@ -16,5 +16,6 @@ export const fetchImages = async (searchValue, currentPage) => {
     return response.data;
   } catch (error) {
     console.error(error);
+    return 'error';
   }
 };
