@@ -24,28 +24,33 @@ export class ImageGallery extends Component {
     )
       return;
 
-    this.setState({ status: 'pending' });
+    if (
+      prevState.searchQuery !== searchValue ||
+      prevState.currentPage !== currentPage
+    ) {
+      this.setState({ status: 'pending' });
 
-    const fetchResults = await fetchImages(searchValue, currentPage);
+      const fetchResults = await fetchImages(searchValue, currentPage);
 
-    if (fetchResults === 'error') {
-      return this.setState({ status: 'rejected' });
+      if (fetchResults === 'error') {
+        return this.setState({ status: 'rejected' });
+      }
+
+      if (fetchResults.hits.length === 0) {
+        return this.setState({ status: 'empty' });
+      }
+
+      const collectionHits =
+        currentPage === 1
+          ? fetchResults.hits
+          : [...this.state.searchData, ...fetchResults.hits];
+
+      this.setState({
+        searchData: collectionHits,
+        totalHits: fetchResults.totalHits,
+        status: 'resolved',
+      });
     }
-
-    if (fetchResults.hits.length === 0) {
-      return this.setState({ status: 'empty' });
-    }
-
-    const collectionHits =
-      currentPage === 1
-        ? fetchResults.hits
-        : [...this.state.searchData, ...fetchResults.hits];
-
-    this.setState({
-      searchData: collectionHits,
-      totalHits: fetchResults.totalHits,
-      status: 'resolved',
-    });
   }
 
   render() {
