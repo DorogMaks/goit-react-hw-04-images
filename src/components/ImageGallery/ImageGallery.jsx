@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { Component } from 'react';
+import { useState } from 'react';
 import { fetchImages } from 'services/api';
 import { List } from './ImageGallery.styled';
 import { ImageGalleryItem } from './ImageGalleryItem/ImageGalleryItem';
@@ -7,103 +7,81 @@ import { Loader } from 'components/Loader/Loader';
 import { Button } from 'components/Button/Button';
 import { Notification } from 'components/Notification/Notification';
 import ImgNotFound from '../../images/imgNotFound.jpg';
+import { useEffect } from 'react';
 
-export class ImageGallery extends Component {
-  state = {
-    searchData: [],
-    totalHits: 0,
-    status: 'idle',
-  };
+export const ImageGallery = ({ searchValue, currentPage, onLoadMoreBtn }) => {
+  const [searchData, setSearchData] = useState([]);
+  const [totalHits, setTotalHits] = useState(0);
+  const [status, setStatus] = useState('idle');
 
-  async componentDidUpdate(prevProps, prevState) {
-    const { searchValue, currentPage } = this.props;
+  useEffect(() => {
+    if (!searchValue) return;
 
-    if (
-      prevProps.searchValue === searchValue &&
-      prevProps.currentPage === currentPage
-    )
-      return;
+    if (currentPage === 1) setSearchData([]);
 
-    if (
-      prevState.searchQuery !== searchValue ||
-      prevState.currentPage !== currentPage
-    ) {
-      if (currentPage === 1) {
-        this.setState({ searchData: [] });
-      }
+    setStatus('pending');
 
-      this.setState({ status: 'pending' });
+    fetchImages(searchValue, currentPage)
+      .then(fetchResults => {
+        if (fetchResults.hits.length === 0) return setStatus('empty');
 
-      const fetchResults = await fetchImages(searchValue, currentPage);
+        setSearchData(prevSearchData => [
+          ...prevSearchData,
+          ...fetchResults.hits,
+        ]);
+        setTotalHits(fetchResults.totalHits);
+        setStatus('resolved');
+      })
+      .catch(() => setStatus('rejected'));
+  }, [currentPage, searchValue]);
 
-      if (fetchResults === 'error') {
-        return this.setState({ status: 'rejected' });
-      }
-
-      if (fetchResults.hits.length === 0) {
-        return this.setState({ status: 'empty' });
-      }
-
-      this.setState(prev => ({
-        searchData: [...prev.searchData, ...fetchResults.hits],
-        totalHits: fetchResults.totalHits,
-        status: 'resolved',
-      }));
-    }
+  if (status === 'idle') {
+    return <Notification message="Let's find some images" />;
   }
 
-  render() {
-    const { searchData, totalHits, status } = this.state;
-    const { onLoadMoreBtn, currentPage } = this.props;
-
-    if (status === 'idle') {
-      return <Notification message="Let's find some images" />;
-    }
-
-    if (status === 'empty') {
-      return (
-        <Notification message="Sorry, no images match your search">
-          <img src={ImgNotFound} alt="images not found" width="280px" />
-        </Notification>
-      );
-    }
-
-    if (status === 'rejected') {
-      return <Notification message="Ooops, something went wrong" />;
-    }
-
-    if (status === 'pending' && totalHits === 0) {
-      return (
-        <Notification>
-          <Loader />
-        </Notification>
-      );
-    }
-
-    if (status === 'resolved') {
-      const totalHitsCount = totalHits - currentPage * 12;
-
-      return (
-        <>
-          <List>
-            {searchData.map(({ id, webformatURL, largeImageURL, tags }) => (
-              <ImageGalleryItem
-                key={id}
-                smallImage={webformatURL}
-                largeImage={largeImageURL}
-                imageDescription={tags}
-              />
-            ))}
-          </List>
-
-          {totalHitsCount > 0 && (
-            <Button onLoadMoreBtn={onLoadMoreBtn} status={status} />
-          )}
-        </>
-      );
-    }
+  if (status === 'empty') {
+    return (
+      <Notification message="Sorry, no images match your search">
+        <img src={ImgNotFound} alt="images not found" width="280px" />
+      </Notification>
+    );
   }
-}
+
+  if (status === 'rejected') {
+    return <Notification message="Ooops, something went wrong" />;
+  }
+
+  if (status === 'pending' && totalHits === 0) {
+    return (
+      <Notification>
+        <Loader />
+      </Notification>
+    );
+  }
+
+  if (status === 'resolved' || (status === 'pending' && totalHits > 0)) {
+    const totalHitsCount = totalHits - currentPage * 12;
+
+    return (
+      <>
+        <List>
+          {searchData.map(({ id, webformatURL, largeImageURL, tags }) => (
+            <ImageGalleryItem
+              key={id}
+              smallImage={webformatURL}
+              largeImage={largeImageURL}
+              imageDescription={tags}
+            />
+          ))}
+        </List>
+
+        {totalHitsCount > 0 && (
+          <Button onLoadMoreBtn={onLoadMoreBtn} status={status} />
+        )}
+      </>
+    );
+  }
+};
 
 ImageGallery.propTypes = {
   searchValue: PropTypes.string.isRequired,

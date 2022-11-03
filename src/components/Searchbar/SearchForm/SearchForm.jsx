@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import { useState } from 'react';
 import { ReactComponent as SearchIcon } from '../../../images/search.svg';
 import {
   SearchFormStyled,
@@ -8,45 +8,39 @@ import {
   ButtonLabel,
 } from './SearchForm.styled';
 
-export class SearchForm extends Component {
-  state = {
-    searcValue: '',
+export const SearchForm = ({ onFormSubmit }) => {
+  const [searchValue, setSearchValue] = useState('');
+
+  const handleСhange = evt => {
+    setSearchValue(evt.target.value);
   };
 
-  handleСhange = evt => {
-    this.setState({
-      [evt.target.name]: evt.target.value,
-    });
-  };
-
-  handleSubmit = evt => {
+  const handleSubmit = evt => {
     evt.preventDefault();
 
-    this.props.onFormSubmit(this.state.searcValue);
+    onFormSubmit(searchValue);
 
-    this.setState({ searcValue: '' });
+    setSearchValue('');
   };
 
-  render() {
-    return (
-      <SearchFormStyled autoComplete="off" onSubmit={this.handleSubmit}>
-        <SearchFormButton type="submit">
-          <ButtonLabel>Search</ButtonLabel>
-          <SearchIcon width="20" height="20" />
-        </SearchFormButton>
+  return (
+    <SearchFormStyled autoComplete="off" onSubmit={handleSubmit}>
+      <SearchFormButton type="submit">
+        <ButtonLabel>Search</ButtonLabel>
+        <SearchIcon width="20" height="20" />
+      </SearchFormButton>
 
-        <SearchFormInput
-          type="text"
-          name="searcValue"
-          autoFocus
-          placeholder="Search images and photos"
-          value={this.state.searcValue}
-          onChange={this.handleСhange}
-        />
-      </SearchFormStyled>
-    );
-  }
-}
+      <SearchFormInput
+        type="text"
+        name="searchValue"
+        autoFocus
+        placeholder="Search images and photos"
+        value={searchValue}
+        onChange={handleСhange}
+      />
+    </SearchFormStyled>
+  );
+};
 
 SearchForm.propTypes = {
   onFormSubmit: PropTypes.func.isRequired,

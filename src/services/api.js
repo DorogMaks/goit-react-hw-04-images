@@ -11,11 +11,6 @@ export const fetchImages = async (searchValue, currentPage) => {
     per_page: 12,
   };
 
-  try {
-    const response = await axios.get(url, { params: urlParams });
-    return response.data;
-  } catch (error) {
-    console.error(error);
-    return 'error';
-  }
+  const response = await axios.get(url, { params: urlParams });
+  return response.data;
 };
