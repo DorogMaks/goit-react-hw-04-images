@@ -22,14 +22,11 @@ export const ImageGallery = ({ searchValue, currentPage, onLoadMoreBtn }) => {
     setStatus('pending');
 
     fetchImages(searchValue, currentPage)
-      .then(fetchResults => {
-        if (fetchResults.hits.length === 0) return setStatus('empty');
+      .then(({ hits, totalHits }) => {
+        if (hits.length === 0) return setStatus('empty');
 
-        setSearchData(prevSearchData => [
-          ...prevSearchData,
-          ...fetchResults.hits,
-        ]);
-        setTotalHits(fetchResults.totalHits);
+        setSearchData(prevSearchData => [...prevSearchData, ...hits]);
+        setTotalHits(totalHits);
         setStatus('resolved');
       })
       .catch(() => setStatus('rejected'));
